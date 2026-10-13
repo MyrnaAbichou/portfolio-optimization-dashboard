@@ -1,4 +1,4 @@
-"""Streamlit dashboard. Run with:  streamlit run app.py"""
+"""Portfolio Optimizer - Streamlit dashboard. Run with:  streamlit run app.py"""
 
 import os
 
@@ -10,10 +10,10 @@ from src.ai_analyst import ai_commentary, build_prompt, rule_based_summary
 from src.data import download_prices
 from src.pipeline import run_analysis
 
-st.set_page_config(page_title="Portfolio Optimizer", page_icon="📈", layout="wide")
-st.title("📈 Portfolio Optimization & Risk-Return Dashboard")
-st.caption("Modern Portfolio Theory on real market data, with an AI risk review. "
-           "Educational project - not investment advice.")
+st.set_page_config(page_title="Portfolio Optimizer", layout="wide")
+
+st.title("Portfolio Optimizer")
+st.caption("Myrna Abichou  ·  Mean-variance optimisation on daily market data")
 
 # ---------- Sidebar: user inputs ----------
 with st.sidebar:
@@ -21,7 +21,8 @@ with st.sidebar:
     tickers = st.multiselect("Assets", list(config.DEFAULT_TICKERS),
                              default=list(config.DEFAULT_TICKERS),
                              format_func=lambda t: f"{t} - {config.DEFAULT_TICKERS.get(t, t)}")
-    extra = st.text_input("Add tickers (comma-separated, Yahoo format)", "")
+    extra = st.text_input("Add tickers", "", placeholder="e.g. BTC-USD, MC.PA",
+                          help="Yahoo Finance symbols, separated by commas.")
     tickers += [t.strip().upper() for t in extra.split(",") if t.strip()]
 
     start = st.date_input("Start date", pd.Timestamp(config.START_DATE))
@@ -67,19 +68,22 @@ except Exception as err:
 
 # ---------- Headline numbers ----------
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Max-Sharpe return", f"{r['perf_sharpe'][0]:.1%}")
-c2.metric("Max-Sharpe volatility", f"{r['perf_sharpe'][1]:.1%}")
-c3.metric("Max-Sharpe ratio", f"{r['perf_sharpe'][2]:.2f}")
-c4.metric("Min-vol volatility", f"{r['perf_minvol'][1]:.1%}")
+c1.metric("Expected return", f"{r['perf_sharpe'][0]:.1%}")
+c2.metric("Volatility", f"{r['perf_sharpe'][1]:.1%}")
+c3.metric("Sharpe ratio", f"{r['perf_sharpe'][2]:.2f}")
+c4.metric("Min. volatility", f"{r['perf_minvol'][1]:.1%}")
+st.caption(f"Max-Sharpe portfolio · {prices.shape[1]} assets · "
+           f"{prices.index[0]:%b %Y} to {prices.index[-1]:%b %Y}")
 
 weights = {"Max Sharpe": r["w_sharpe"], "Min volatility": r["w_minvol"]}
-tab1, tab2, tab3, tab4 = st.tabs(["Risk-return", "Allocations", "Assets", "🤖 AI review"])
+tab1, tab2, tab3, tab4 = st.tabs(["Risk & return", "Allocation", "Assets", "AI review"])
 
 with tab1:
     st.pyplot(charts.plot_risk_return(r["random_results"], r["frontier"], r["asset_stats"],
                                       r["perf_sharpe"], r["perf_minvol"]))
-    st.markdown("Each dot is a random portfolio. The red curve is the **efficient frontier**: "
-                "the lowest risk achievable for each level of return.")
+    st.markdown("Each dot is a random portfolio, coloured by its Sharpe ratio. The blue curve "
+                "is the **efficient frontier**: the lowest risk achievable for each level "
+                "of return.")
 
 with tab2:
     st.pyplot(charts.plot_weights(weights))
@@ -113,3 +117,8 @@ with tab4:
             st.markdown(rule_based_summary(r["asset_stats"], r["w_sharpe"],
                                            r["perf_sharpe"], r["perf_minvol"]))
             st.caption("No API key: showing the rule-based summary instead.")
+
+st.divider()
+st.caption("Built by Myrna Abichou · "
+           "[Source code](https://github.com/MyrnaAbichou/portfolio-optimization-dashboard) · "
+           "Educational project, not investment advice.")
