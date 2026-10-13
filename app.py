@@ -43,6 +43,23 @@ def load(tickers_tuple, start_date):
 
 try:
     prices = load(tuple(tickers), str(start))
+except Exception as err:
+    st.error(f"Could not download prices: {err}")
+    st.stop()
+
+dropped = prices.attrs.get("dropped", [])
+if dropped:
+    st.warning(f"Not enough data for {', '.join(dropped)} (wrong ticker or too recent) "
+               "- removed from the analysis.")
+if prices.shape[1] < 2:
+    st.error("Fewer than two assets have usable data. Check the tickers.")
+    st.stop()
+if max_weight * prices.shape[1] < 1:
+    st.error(f"With {prices.shape[1]} assets, the max weight per asset must be at least "
+             f"{1 / prices.shape[1]:.0%} so the weights can add up to 100%.")
+    st.stop()
+
+try:
     r = run_analysis(prices, rf, n_portfolios, max_weight, config.RANDOM_SEED)
 except Exception as err:
     st.error(f"Could not run the analysis: {err}")
