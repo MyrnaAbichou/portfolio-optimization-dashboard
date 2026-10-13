@@ -1,4 +1,5 @@
 # Portfolio Optimization & Risk-Return Dashboard
+**Live demo:** [myrna-portfolio-optimizer.streamlit.app](https://myrna-portfolio-optimizer.streamlit.app)
 
 A Python project applying **Modern Portfolio Theory** (Markowitz, 1952) to real market data, with an interactive Streamlit dashboard and an **AI risk analyst** powered by Claude.
 
